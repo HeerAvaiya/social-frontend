@@ -58,7 +58,7 @@ const Register = () => {
                         placeholder="Username"
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black/30"
                     />
 
                     <input
@@ -67,7 +67,7 @@ const Register = () => {
                         placeholder="Email address"
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black/30"
                     />
 
                     <input
@@ -76,7 +76,7 @@ const Register = () => {
                         placeholder="Password"
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black/30"
                     />
 
                     <button

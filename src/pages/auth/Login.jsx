@@ -66,7 +66,7 @@ const Login = () => {
                         onChange={handleChange}
                         value={formData.email}
                         required
-                        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black/30"
                     />
 
                     <input
@@ -76,7 +76,7 @@ const Login = () => {
                         onChange={handleChange}
                         value={formData.password}
                         required
-                        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                        className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black/30"
                     />
 
                     <div className="text-right text-sm mt-1">
@@ -103,7 +103,7 @@ const Login = () => {
                     </button>
 
                     {message && (
-                        <p className={`text-center text-sm mt-2 ${message.includes('') ? 'text-green-600' : 'text-red-600'}`}>
+                        <p className={`text-center text-sm mt-2 ${message.toLowerCase().includes('success') ? 'text-green-600' : 'text-red-600'}`}>
                             {message}
                         </p>
                     )}

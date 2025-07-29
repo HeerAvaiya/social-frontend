@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios'; 
+import api from '../../api/axios';
 
 const SelectProfile = () => {
     const [image, setImage] = useState(null);
@@ -44,7 +44,7 @@ const SelectProfile = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-            <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
+            <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center border border-black/50">
                 <h2 className="text-2xl font-semibold mb-4">Upload Your Profile Picture</h2>
 
                 {preview && (
@@ -82,4 +82,5 @@ const SelectProfile = () => {
 };
 
 export default SelectProfile;
+
 
