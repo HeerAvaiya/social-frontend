@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios'; // make sure this points to axios instance
+import api from '../../api/axios'; 
 
 const SelectProfile = () => {
     const [image, setImage] = useState(null);
@@ -30,10 +30,10 @@ const SelectProfile = () => {
                 },
             });
 
-            console.log("✅ Profile image uploaded:", res.data);
+            console.log("Profile image uploaded:", res.data);
             navigate('/');
         } catch (error) {
-            console.error("❌ Upload failed:", error?.response?.data || error.message);
+            console.error("Upload failed:", error?.response?.data || error.message);
             alert("Upload failed: " + (error?.response?.data?.message || error.message));
         }
     };

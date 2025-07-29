@@ -30,7 +30,7 @@ const Register = () => {
             );
 
             if (res.data?.data?.user) {
-                setMessage("Registered successfully ✅");
+                setMessage("Registered successfully");
                 setTimeout(() => navigate('/login'), 1500);
             } else {
                 setMessage("Something went wrong");

@@ -14,7 +14,7 @@ const ForgotPassword = () => {
                 { email }
             );
 
-            setMessage("✅ Password reset link sent to your email.");
+            setMessage("Password reset link sent to your email.");
         } catch (err) {
             console.error(err);
             setMessage(err?.response?.data?.message || 'Failed to send email.');
@@ -41,7 +41,7 @@ const ForgotPassword = () => {
                         Send Reset Link
                     </button>
                     {message && (
-                        <p className={`text-center mt-2 ${message.includes('✅') ? 'text-green-600' : 'text-red-600'}`}>
+                        <p className={`text-center mt-2 ${message.includes('') ? 'text-green-600' : 'text-red-600'}`}>
                             {message}
                         </p>
                     )}

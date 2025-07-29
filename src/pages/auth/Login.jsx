@@ -29,13 +29,13 @@ const Login = () => {
                 formData
             );
 
-            console.log("✅ Login Response:", res.data);
+            console.log("Login Response:", res.data);
 
             const accessToken = res.data?.data?.tokens?.accessToken;
 
             if (accessToken) {
                 localStorage.setItem('token', accessToken);
-                setMessage("Login successful ✅");
+                setMessage("Login successful");
 
                 setTimeout(() => navigate('/select-profile'), 1500);
             } else {
@@ -43,7 +43,7 @@ const Login = () => {
             }
 
         } catch (err) {
-            console.error("❌ Login error:", err);
+            console.error("Login error:", err);
             setMessage(err?.response?.data?.message || 'Login failed');
         }
     };
@@ -103,7 +103,7 @@ const Login = () => {
                     </button>
 
                     {message && (
-                        <p className={`text-center text-sm mt-2 ${message.includes('✅') ? 'text-green-600' : 'text-red-600'}`}>
+                        <p className={`text-center text-sm mt-2 ${message.includes('') ? 'text-green-600' : 'text-red-600'}`}>
                             {message}
                         </p>
                     )}
