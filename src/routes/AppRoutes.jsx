@@ -6,6 +6,7 @@ import SelectProfile from '../pages/auth/SelectProfile';
 import ForgotPassword from '../pages/auth/ForgotPassword';
 import ResetPassword from '../pages/auth/ResetPassword';
 import Profile from '../pages/profile/Profile';
+import Discover from '../pages/Discover';
 
 
 const requireToken = () => !!localStorage.getItem('token');
@@ -22,6 +23,7 @@ export default function AppRoutes() {
                 <Route path="/select-profile" element={<SelectProfile />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/discover" element={<Discover />} />
             </Routes>
         </BrowserRouter>
     );

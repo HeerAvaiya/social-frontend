@@ -1,153 +1,163 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios';
-import EditProfileModal from '../../components/EditProfileModal';
-
-const AVATAR_FALLBACK = 'https://via.placeholder.com/150?text=Avatar';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../../api/axios";
+import EditProfileModal from "../../components/EditProfileModal";
 
 export default function Profile() {
     const navigate = useNavigate();
-    const [me, setMe] = useState(null);
+    const [user, setUser] = useState(null);
     const [followersCount, setFollowersCount] = useState(0);
     const [followingCount, setFollowingCount] = useState(0);
     const [posts, setPosts] = useState([]);
-    const [showSettings, setShowSettings] = useState(false);
-    const token = localStorage.getItem('token');
-    const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+    const [openEdit, setOpenEdit] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const isFetchingRef = useRef(false);
 
-    const loadMe = useCallback(async () => {
+    const token = useMemo(() => localStorage.getItem("token"), []);
+
+    const fetchProfile = useCallback(async () => {
+        if (isFetchingRef.current) return;
+        isFetchingRef.current = true;
         try {
-            const res = await api.get('/users/me', { headers: authHeader });
-            const user = res.data?.data || res.data?.user || res.data;
-            setMe(user);
-
-            try {
-                const [fRes, gRes] = await Promise.all([
-                    api.get(`/users/${user.id}/followers`, { headers: authHeader }),
-                    api.get(`/users/${user.id}/following`, { headers: authHeader }),
-                ]);
-                setFollowersCount(fRes.data?.followers?.length || 0);
-                setFollowingCount(gRes.data?.following?.length || 0);
-            } catch { }
-
-            // TODO: replace with your real posts endpoint and setter
-            setPosts([]);
-        } catch (err) {
-            const status = err?.response?.status;
-            if (status === 401) {
-                localStorage.removeItem('token');
-                navigate('/login');
+            const res = await api.get("/users/me", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setUser(res.data?.data || res.data?.user || null);
+        } catch (e) {
+            if (e?.response?.status === 401) {
+                localStorage.removeItem("token");
+                navigate("/login");
             } else {
-                console.error('Fetch profile failed:', err?.response?.data || err?.message);
+                console.error("Fetch profile failed:", e?.message || e);
             }
+        } finally {
+            isFetchingRef.current = false;
+            setLoading(false);
         }
-    }, [authHeader, navigate]);
+    }, [navigate, token]);
 
     useEffect(() => {
-        loadMe();
-    }, [loadMe]);
+        fetchProfile();
+    }, [fetchProfile]);
 
-    const handleAvatarChange = async (e) => {
-        const file = e.target.files?.[0];
+    useEffect(() => {
+        if (!user?.id || !token) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const [followersRes, followingRes] = await Promise.all([
+                    api.get(`/users/${user.id}/followers`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                    api.get(`/users/${user.id}/following`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                ]);
+                if (!cancelled) {
+                    setFollowersCount(followersRes.data?.followers?.length || 0);
+                    setFollowingCount(followingRes.data?.following?.length || 0);
+                }
+            } catch (e) {
+                console.error("Fetch counts failed:", e?.message || e);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [user?.id, token]);
+
+    const handleUploadAvatar = async (file) => {
         if (!file) return;
-
-        const form = new FormData();
-        form.append('image', file);
-
         try {
-            await api.post('/users/profile/image', form, {
-                headers: { 'Content-Type': 'multipart/form-data', ...authHeader },
+            const fd = new FormData();
+            fd.append("image", file);
+            const res = await api.post("/users/profile/image", fd, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    Authorization: `Bearer ${token}`,
+                },
             });
-            await loadMe();
-        } catch (err) {
-            alert(err?.response?.data?.message || 'Avatar update failed');
+            setUser((u) => ({
+                ...(u || {}),
+                profileImageUrl:
+                    res.data?.profileImageUrl || res.data?.user?.profileImageUrl || u?.profileImageUrl,
+                cloudinaryPublicId:
+                    res.data?.user?.cloudinaryPublicId || u?.cloudinaryPublicId,
+            }));
+        } catch (e) {
+            console.error("Avatar upload failed:", e?.response?.data || e.message);
+            alert(e?.response?.data?.message || "Upload failed");
         }
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        navigate('/login');
+    const onFilePick = (e) => {
+        const f = e.target.files?.[0];
+        handleUploadAvatar(f);
     };
 
-    if (!me) {
-        return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
-    }
+    if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    if (!user) return null;
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="bg-white border-b px-4 sm:px-6 py-3 flex items-center justify-between">
+        <div className="min-h-screen bg-white">
+            <header className="bg-white shadow-sm px-6 py-3 flex items-center justify-between">
                 <div className="text-2xl font-bold text-pink-600">Instagram</div>
-                <div className="flex items-center gap-3">
-                    <input placeholder="Search…" className="border rounded-md px-3 py-1 text-sm w-48 sm:w-64" />
-                    <img
-                        src={me.profileImageUrl || AVATAR_FALLBACK}
-                        alt="me"
-                        className="w-9 h-9 rounded-full object-cover border cursor-pointer"
-                        title="Profile"
-                        onClick={() => setShowSettings((s) => !s)}
-                    />
-                </div>
+                <input type="text" placeholder="Search..." className="border rounded px-3 py-1 text-sm" />
+                <img
+                    src={user.profileImageUrl || "https://via.placeholder.com/80?text=Avatar"}
+                    alt="avatar"
+                    className="w-9 h-9 rounded-full object-cover border"
+                />
             </header>
 
-            <main className="max-w-5xl mx-auto p-4">
-                <section className="flex gap-6 sm:gap-10 items-center">
+            <section className="max-w-4xl mx-auto px-4 py-6 border-b">
+                <div className="flex items-start gap-6">
                     <div className="relative">
                         <img
-                            src={me.profileImageUrl || AVATAR_FALLBACK}
-                            alt="avatar"
-                            className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border"
+                            src={user.profileImageUrl || "https://via.placeholder.com/150?text=Avatar"}
+                            alt="profile"
+                            className="w-24 h-24 rounded-full object-cover border"
                         />
-                        <label
-                            htmlFor="avatar-file"
-                            className="absolute -bottom-2 -right-2 bg-pink-600 hover:bg-pink-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-xl cursor-pointer"
-                            title="Change profile photo"
-                        >
+                        <label className="absolute -bottom-1 -right-1 bg-pink-600 text-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer">
                             +
+                            <input type="file" accept="image/*" className="hidden" onChange={onFilePick} />
                         </label>
-                        <input id="avatar-file" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                     </div>
 
                     <div className="flex-1">
                         <div className="flex items-center gap-3">
-                            <h2 className="text-xl sm:text-2xl font-semibold">{me.username}</h2>
-                            <button
-                                onClick={() => setShowSettings(true)}
-                                className="ml-2 px-3 py-1 border rounded hover:bg-gray-100"
-                                title="Settings"
-                            >
+                            <h2 className="text-xl font-semibold truncate max-w-[180px]">{user.username}</h2>
+                            <button onClick={() => setOpenEdit(true)} className="border rounded px-2 py-1 text-sm">
                                 ☰
                             </button>
                         </div>
-                        <div className="flex gap-6 mt-3 text-sm sm:text-base">
-                            <span><strong>{posts.length}</strong> posts</span>
-                            <span><strong>{followersCount}</strong> followers</span>
-                            <span><strong>{followingCount}</strong> following</span>
+
+                        <div className="flex items-center gap-6 mt-3 text-sm">
+                            <span><b>{posts.length}</b> posts</span>
+                            <span><b>{followersCount}</b> followers</span>
+                            <span><b>{followingCount}</b> following</span>
                         </div>
-                        {me.bio && <p className="mt-3 text-gray-700">{me.bio}</p>}
+
+                        {user.bio && <p className="mt-2 text-gray-700 text-sm">{user.bio}</p>}
                     </div>
-                </section>
+                </div>
+            </section>
 
-                <div className="border-t my-6" />
+            <section className="max-w-4xl mx-auto px-4 py-6">
+                {posts.length === 0 ? (
+                    <p className="text-center text-gray-500">No posts yet.</p>
+                ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                        {posts.map((p) => (
+                            <img key={p.id} src={p.imageUrl} alt="" className="w-full aspect-square object-cover" />
+                        ))}
+                    </div>
+                )}
+            </section>
 
-                <section>
-                    {posts.length === 0 ? (
-                        <p className="text-center text-gray-500">No posts yet.</p>
-                    ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
-                            {posts.map((p) => (
-                                <img key={p.id} src={p.imageUrl} alt={p.caption || 'post'} className="aspect-square object-cover rounded" />
-                            ))}
-                        </div>
-                    )}
-                </section>
-            </main>
-
-            {showSettings && (
+            {openEdit && (
                 <EditProfileModal
-                    initial={{ username: me.username, bio: me.bio || '' }}
-                    onClose={() => setShowSettings(false)}
-                    onSaved={async () => { await loadMe(); setShowSettings(false); }}
-                    onLogout={handleLogout}
+                    user={user}
+                    onClose={() => setOpenEdit(false)}
+                    onSaved={(updated) => setUser(updated)}
                 />
             )}
         </div>

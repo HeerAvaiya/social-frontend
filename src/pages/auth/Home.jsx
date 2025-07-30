@@ -25,13 +25,15 @@ function Home() {
     const handleLogout = () => {
         localStorage.removeItem('token');
         setUser(null);
-        setMessage('✅ Logged out successfully');
+        setMessage(' Logged out successfully');
     };
 
     return (
         <div className="min-h-screen bg-gray-100">
             <header className="bg-white shadow-sm px-4 py-3 flex items-center justify-between">
                 <h1 className="text-xl font-bold text-gray-800">Instagram</h1>
+
+                <Link to="/discover" className="text-sm text-gray-700 hover:underline">Discover</Link>
 
                 <div className="flex items-center gap-4">
                     <input
@@ -61,7 +63,7 @@ function Home() {
                 <h2 className="text-2xl font-semibold mt-4">Home Page</h2>
                 {message && (
                     <p
-                        className={`text-sm mt-2 ${message.includes('✅') ? 'text-green-600' : 'text-red-600'
+                        className={`text-sm mt-2 ${message.includes('') ? 'text-green-600' : 'text-red-600'
                             }`}
                     >
                         {message}
