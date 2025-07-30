@@ -1,4 +1,3 @@
-// src/utils/tokenHandler.js
 export const getToken = () => {
     return localStorage.getItem('token');
 };
