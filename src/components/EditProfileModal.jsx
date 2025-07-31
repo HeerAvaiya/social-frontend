@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 export default function EditProfileModal({ user, onClose, onSaved }) {
+    const navigate = useNavigate();
+
     const initial = useMemo(
         () => ({
             username: user?.username || "",
@@ -59,7 +62,7 @@ export default function EditProfileModal({ user, onClose, onSaved }) {
 
             const updated =
                 res?.data?.data || res?.data?.user || { ...user, ...form, isPrivate };
-            onSaved?.(updated); 
+            onSaved?.(updated);
             onClose?.();
         } catch (e) {
             setError(e?.response?.data?.message || e.message || "Update failed");
@@ -88,11 +91,16 @@ export default function EditProfileModal({ user, onClose, onSaved }) {
         }
     };
 
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        navigate("/login");
+    };
+
     return (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div
                 className="bg-white w-full max-w-md rounded-xl p-5"
-                onClick={(e) => e.stopPropagation()} 
+                onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-semibold">Edit profile</h3>
@@ -154,22 +162,32 @@ export default function EditProfileModal({ user, onClose, onSaved }) {
                     {error && <p className="text-red-600 text-sm">{error}</p>}
                     {info && !error && <p className="text-gray-600 text-sm">{info}</p>}
 
-                    <div className="flex justify-end gap-2 pt-2">
+                    <div className="flex items-center justify-between pt-2">
                         <button
-                            onClick={onClose}
-                            className="px-4 py-2 rounded border"
+                            onClick={handleLogout}
+                            className="px-4 py-2 rounded border border-red-500 text-red-600 hover:bg-red-50"
                             disabled={saving || toggling}
                         >
-                            Cancel
+                            Logout
                         </button>
-                        <button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className={`px-4 py-2 rounded text-white ${saving ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
-                                }`}
-                        >
-                            {saving ? "Saving..." : "Save"}
-                        </button>
+
+                        <div className="flex gap-2">
+                            <button
+                                onClick={onClose}
+                                className="px-4 py-2 rounded border"
+                                disabled={saving || toggling}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                disabled={saving}
+                                className={`px-4 py-2 rounded text-white ${saving ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+                                    }`}
+                            >
+                                {saving ? "Saving..." : "Save"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
