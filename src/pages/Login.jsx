@@ -1,17 +1,29 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser, clearAuthMessages } from '../features/auth/authSlice';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
+    const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    const { loading, error, token, successMessage } = useSelector(state => state.auth);
 
     const [formData, setFormData] = useState({
         email: '',
         password: '',
     });
 
-    const [message, setMessage] = useState('');
-    const [loading, setLoading] = useState(false);
+    useEffect(() => {
+        dispatch(clearAuthMessages());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (token) {
+            setTimeout(() => navigate('/select-profile'), 1500);
+        }
+    }, [token, navigate]);
+
 
     const handleChange = (e) => {
         setFormData(prev => ({
@@ -20,32 +32,9 @@ const Login = () => {
         }));
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-
-        try {
-            const res = await axios.post(
-                `${import.meta.env.VITE_API_BASE_URL}/auth/login`,
-                formData
-            );
-
-            console.log("Login Response:", res.data);
-
-            const accessToken = res.data?.data?.tokens?.accessToken;
-
-            if (accessToken) {
-                localStorage.setItem('token', accessToken);
-                setMessage("Login successful");
-
-                setTimeout(() => navigate('/select-profile'), 1500);
-            } else {
-                setMessage("Login failed: No token");
-            }
-
-        } catch (err) {
-            console.error("Login error:", err);
-            setMessage(err?.response?.data?.message || 'Login failed');
-        }
+        dispatch(loginUser(formData));
     };
 
     return (
@@ -82,8 +71,8 @@ const Login = () => {
                     <div className="text-right text-sm mt-1">
                         <span
                             onClick={() => {
-                                if (!formData.email || formData.email.trim() === "") {
-                                    setMessage("Please enter your email before proceeding to reset.");
+                                if (!formData.email.trim()) {
+                                    alert("Please enter your email before proceeding.");
                                 } else {
                                     navigate(`/forgot-password?email=${encodeURIComponent(formData.email)}`);
                                 }
@@ -102,11 +91,8 @@ const Login = () => {
                         {loading ? 'Logging in...' : 'Log In'}
                     </button>
 
-                    {message && (
-                        <p className={`text-center text-sm mt-2 ${message.toLowerCase().includes('success') ? 'text-green-600' : 'text-red-600'}`}>
-                            {message}
-                        </p>
-                    )}
+                    {error && <p className="text-red-600 text-center text-sm">{error}</p>}
+                    {successMessage && <p className="text-green-600 text-center text-sm">{successMessage}</p>}
                 </form>
 
                 <p className="text-center text-sm text-gray-600 mt-4">

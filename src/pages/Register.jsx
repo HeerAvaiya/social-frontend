@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { registerUser, clearAuthMessages } from '../features/auth/authSlice';
 import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
+    const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    const { loading, error, successMessage, user } = useSelector((state) => state.auth);
 
     const [formData, setFormData] = useState({
         username: '',
         email: '',
         password: '',
     });
-
-    const [message, setMessage] = useState('');
 
     const handleChange = (e) => {
         setFormData(prev => ({
@@ -20,26 +22,24 @@ const Register = () => {
         }));
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-
-        try {
-            const res = await axios.post(
-                `${import.meta.env.VITE_API_BASE_URL}/auth/register`,
-                formData
-            );
-
-            if (res.data?.data?.user) {
-                setMessage("Registered successfully");
-                setTimeout(() => navigate('/login'), 1500);
-            } else {
-                setMessage("Something went wrong");
-            }
-
-        } catch (err) {
-            setMessage(err?.response?.data?.message || 'Registration failed');
-        }
+        dispatch(registerUser(formData));
     };
+
+    useEffect(() => {
+        dispatch(clearAuthMessages());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (user) {
+            setTimeout(() => {
+                dispatch(clearAuthMessages());
+                navigate('/login');
+            }, 1500);
+        }
+    }, [user, navigate, dispatch]);
+
 
     return (
         <div className="min-h-screen flex items-center justify-center ">
@@ -81,13 +81,18 @@ const Register = () => {
 
                     <button
                         type="submit"
+                        disabled={loading}
                         className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-2 rounded-md font-semibold hover:opacity-90 transition"
                     >
-                        Sign Up
+                        {loading ? 'Registering...' : 'Sign Up'}
                     </button>
 
-                    {message && (
-                        <p className="text-center text-sm text-green-600 mt-2">{message}</p>
+                    {error && (
+                        <p className="text-center text-sm text-red-600 mt-2">{error}</p>
+                    )}
+
+                    {successMessage && (
+                        <p className="text-center text-sm text-green-600 mt-2">{successMessage}</p>
                     )}
                 </form>
 

@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios';
+import { clearProfileState, uploadProfileImage } from '../features/profile/profileSlice';
+
 
 const SelectProfile = () => {
     const [image, setImage] = useState(null);
     const [preview, setPreview] = useState(null);
+
+    const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { loading, error, success } = useSelector((state) => state.profile);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -15,32 +20,21 @@ const SelectProfile = () => {
         }
     };
 
-    const handleUpload = async () => {
+    const handleUpload = () => {
         if (!image) return alert("Please select an image to upload.");
-
-        const formData = new FormData();
-        formData.append('image', image);
-
-        try {
-            const token = localStorage.getItem('token');
-            const res = await api.post('/users/profile/image', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    ...(token && { Authorization: `Bearer ${token}` }),
-                },
-            });
-
-            console.log("Profile image uploaded:", res.data);
-            navigate('/');
-        } catch (error) {
-            console.error("Upload failed:", error?.response?.data || error.message);
-            alert("Upload failed: " + (error?.response?.data?.message || error.message));
-        }
+        dispatch(uploadProfileImage(image));
     };
 
     const handleSkip = () => {
         navigate('/');
     };
+
+    useEffect(() => {
+        if (success) {
+            dispatch(clearProfileState());
+            navigate('/');
+        }
+    }, [success, navigate, dispatch]);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
@@ -62,9 +56,13 @@ const SelectProfile = () => {
                     className="mb-4"
                 />
 
+                {error && <p className="text-red-600 mb-2">{error}</p>}
+                {loading && <p className="text-blue-600 mb-2">Uploading...</p>}
+
                 <div className="flex justify-center gap-4">
                     <button
                         onClick={handleUpload}
+                        disabled={loading}
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                     >
                         Upload
@@ -82,5 +80,3 @@ const SelectProfile = () => {
 };
 
 export default SelectProfile;
-
-

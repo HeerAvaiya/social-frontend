@@ -1,48 +1,55 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { clearResetMessages, resetPassword } from "../features/auth/resetPasswordSlice";
 
 const ResetPassword = () => {
     const { token } = useParams();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+
+    const { loading, successMessage, errorMessage } = useSelector(
+        (state) => state.resetPassword
+    );
 
     const handleReset = async (e) => {
         e.preventDefault();
 
         if (newPassword !== confirmPassword) {
-            setError("Passwords do not match");
+            dispatch(clearResetMessages());
+            alert("Passwords do not match");
             return;
         }
 
-        try {
-            const res = await axios.post(`http://localhost:8001/api/users/reset-password/${token}`, {
-                newPassword,
-            });
+        dispatch(resetPassword({ token, newPassword }));
+    };
 
-            setSuccess("Password reset successfully. Redirecting to login...");
-            setError("");
-
+    useEffect(() => {
+        if (successMessage) {
             setTimeout(() => {
                 navigate("/login");
+                dispatch(clearResetMessages());
             }, 2000);
-        } catch (err) {
-            setError(err.response?.data?.message || "Reset failed");
-            setSuccess("");
         }
-    };
+    }, [successMessage, navigate, dispatch]);
 
     return (
         <div className="flex justify-center items-center h-screen bg-gray-100">
-            <form onSubmit={handleReset} className="bg-white border border-black/50 p-8 rounded-xl shadow-md w-full max-w-sm ">
+            <form
+                onSubmit={handleReset}
+                className="bg-white border border-black/50 p-8 rounded-xl shadow-md w-full max-w-sm"
+            >
                 <h2 className="text-2xl font-bold mb-6 text-center">Reset Password</h2>
 
-                {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-                {success && <p className="text-green-500 text-sm mb-4">{success}</p>}
+                {errorMessage && (
+                    <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
+                )}
+                {successMessage && (
+                    <p className="text-green-500 text-sm mb-4">{successMessage}</p>
+                )}
 
                 <div className="mb-4">
                     <label className="block text-gray-700 mb-2">New Password</label>
@@ -68,9 +75,10 @@ const ResetPassword = () => {
 
                 <button
                     type="submit"
+                    disabled={loading}
                     className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-2 rounded-md hover:bg-pink-600"
                 >
-                    Reset Password
+                    {loading ? "Resetting..." : "Reset Password"}
                 </button>
             </form>
         </div>
