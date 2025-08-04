@@ -45,18 +45,11 @@ export default function EditProfileModal({ user, onClose, onSaved }) {
     }
   };
 
-  // const handlePrivacyToggle = async () => {
-  //   const result = await dispatch(togglePrivacy());
-  //   if (togglePrivacy.fulfilled.match(result)) {
-  //     onSaved?.({ ...user, ...form, isPrivate: result.payload });
-  //   }
-  // };
-
 
   const handlePrivacyToggle = async () => {
     const result = await dispatch(togglePrivacy());
     if (togglePrivacy.fulfilled.match(result)) {
-      onSaved?.({ ...user, isPrivate: result.payload }); // no form merging
+      onSaved?.({ ...user, isPrivate: result.payload });
     }
   };
 

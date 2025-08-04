@@ -1,77 +1,91 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../api/axios';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 
-export const fetchDiscoverData = createAsyncThunk(
-  'discover/fetchData',
-  async (_, { rejectWithValue }) => {
+
+export const discoverUsers = createAsyncThunk(
+  "discover/discoverUsers",
+  async (query = "", thunkAPI) => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-
-      const meRes = await api.get('/users/me', { headers });
-      const me = meRes.data?.data || meRes.data?.user;
-
-      const fRes = await api.get(`/users/${me.id}/following`, { headers });
-      const followingIds = new Set((fRes.data?.following || []).map(u => u.id));
-
-      const discoverRes = await api.get('/users/discover', { headers });
-      const users = discoverRes.data?.users || [];
-
-      return { me, users, followingIds: Array.from(followingIds) };
-    } catch (err) {
-      const status = err.response?.status;
-      const message = err.response?.data?.message || err.message;
-      return rejectWithValue({ message, status });
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`/api/users/discover?search=${query}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("🔍 DISCOVER RES:", response.data); 
+      return response.data; // should be an array
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || "Failed to discover users");
     }
   }
 );
 
-// Slice
+
+export const followUser = createAsyncThunk(
+  "discover/followUser",
+  async (userId, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(`/api/users/${userId}/follow`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return { userId, ...response.data };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || "Follow failed");
+    }
+  }
+);
+
 const discoverSlice = createSlice({
-  name: 'discover',
+  name: "discover",
   initialState: {
-    loading: false,
-    error: '',
-    me: null,
     users: [],
-    followingIds: [],
-    pendingIds: [],
-    q: '',
+    loading: false,
+    error: null,
   },
   reducers: {
-    setQuery: (state, action) => {
-      state.q = action.payload;
-    },
-    addFollow: (state, action) => {
-      const { userId, isPrivate } = action.payload;
-      if (isPrivate) state.pendingIds.push(userId);
-      else state.followingIds.push(userId);
-    },
-    removeFollow: (state, action) => {
-      const userId = action.payload;
-      state.followingIds = state.followingIds.filter(id => id !== userId);
-      state.pendingIds = state.pendingIds.filter(id => id !== userId);
+    clearDiscover: (state) => {
+      state.users = [];
+      state.loading = false;
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchDiscoverData.pending, (state) => {
+      .addCase(discoverUsers.pending, (state) => {
         state.loading = true;
-        state.error = '';
+        state.error = null;
       })
-      .addCase(fetchDiscoverData.fulfilled, (state, action) => {
+      // .addCase(discoverUsers.fulfilled, (state, action) => {
+      //   state.loading = false;
+      //   state.users = action.payload;
+      // })
+
+      .addCase(discoverUsers.fulfilled, (state, action) => {
         state.loading = false;
-        state.me = action.payload.me;
-        state.users = action.payload.users;
-        state.followingIds = action.payload.followingIds;
+        state.users = Array.isArray(action.payload) ? action.payload : []; // ✅ safer
       })
-      .addCase(fetchDiscoverData.rejected, (state, action) => {
+
+
+      .addCase(discoverUsers.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
-        if (action.payload.status === 401) localStorage.removeItem("token");
+        state.error = action.payload;
+      })
+
+      .addCase(followUser.fulfilled, (state, action) => {
+        const userIndex = state.users.findIndex((u) => u.id === action.payload.userId);
+        if (userIndex !== -1) {
+          state.users[userIndex].isFollowing = true;
+        }
+      })
+      .addCase(followUser.rejected, (state, action) => {
+        state.error = action.payload;
       });
   },
 });
 
-export const { setQuery, addFollow, removeFollow } = discoverSlice.actions;
+export const { clearDiscover } = discoverSlice.actions;
 export default discoverSlice.reducer;
+

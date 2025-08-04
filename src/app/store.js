@@ -8,7 +8,7 @@ import passwordReducer from '../features/auth/passwordSlice';
 import countsReducer from "../features/user/userCountsSlice";
 import editProfileModalReducer from "../features/profile/editProfileModalSlice";
 import followReducer from '../features/user/followSlice';
-import discoverReducer from "../features/user/discoverSlice";
+import discoverReducer from '../features/discover/discoverSlice';
 
 const store = configureStore({
     reducer: {
@@ -18,7 +18,6 @@ const store = configureStore({
         profile: profileReducer,
         resetPassword: resetPasswordReducer,
         password: passwordReducer,
-        user: userReducer,
         counts: countsReducer,
         editProfileModal: editProfileModalReducer,
         follow: followReducer,

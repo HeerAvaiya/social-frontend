@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUserProfile, logout } from '../features/auth/authSlice';
+import DiscoverSearch from '../components/DiscoverSearch';
 
 function Home() {
     const dispatch = useDispatch();
@@ -20,19 +21,27 @@ function Home() {
             <header className="bg-white shadow-sm px-4 py-3 flex items-center justify-between">
                 <h1 className="text-xl font-bold text-gray-800">Instagram</h1>
 
-                <Link to="/discover" className="text-sm text-gray-700 hover:underline">Discover</Link>
+                {user && (
+                    <div className="w-64">
+                        <DiscoverSearch />
+                    </div>
+                )}
 
                 <div className="flex items-center gap-4">
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                        className="border rounded-lg px-2 py-1 text-sm"
-                    />
-
                     {!user ? (
                         <>
-                            <Link to="/register" className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Signup</Link>
-                            <Link to="/login" className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">Login</Link>
+                            <Link
+                                to="/register"
+                                className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                            >
+                                Signup
+                            </Link>
+                            <Link
+                                to="/login"
+                                className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                            >
+                                Login
+                            </Link>
                         </>
                     ) : (
                         <>
@@ -57,7 +66,12 @@ function Home() {
             <main className="p-4 text-center">
                 <h2 className="text-2xl font-semibold mt-4">Home Page</h2>
                 {message && (
-                    <p className={`text-sm mt-2 ${message.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
+                    <p
+                        className={`text-sm mt-2 ${message.includes('successfully')
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                            }`}
+                    >
                         {message}
                     </p>
                 )}
